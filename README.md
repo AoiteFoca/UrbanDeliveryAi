@@ -7,7 +7,7 @@ Este projeto tem como foco a simulação de entregas urbanas em um ambiente 4x4,
 ## Tecnologias Utilizadas
 - Python 3.10+
 - VSCode
-- Bibliotecas: `numpy`, `tabulate`
+- Bibliotecas: `numpy`, `tabulate`, `random`
 
 ## Inteligência Artificial
 O sistema utiliza heurísticas para escolher os melhores caminhos possíveis entre os pontos de entrega no mapa. Os agentes tomam decisões com base em custo estimado (distância de Manhattan) para otimizar o tempo de entrega.
