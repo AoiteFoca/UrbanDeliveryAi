@@ -30,8 +30,8 @@ deliveries = [(3, 3), (0, 0), (2, 1), (1, 2)]
 # Ambos os agentes iniciam no ponto start, mas entregam em pontos diferentes
 # A estrutura do slicing é [start:end:step]
 # Com o Agente Z, o step é 2, então ele entrega em pulando um ponto da lista
-agent1 = DeliveryAgent(start=pos1, deliveries=deliveries[0::], name="Agente X")
-agent2 = DeliveryAgent(start=pos2, deliveries=deliveries[0::2], name="Agente Z")
+agent1 = DeliveryAgent(start=pos1, deliveries=deliveries[0::], city_map=city, name="Agente X")
+agent2 = DeliveryAgent(start=pos2, deliveries=deliveries[0::2], city_map=city, name="Agente Z")
 
 # Executa as entregas
 agent1.deliver()
