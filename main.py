@@ -6,7 +6,7 @@ from autogen import AssistantAgent, UserProxyAgent # type: ignore
 # ------------------------------------------------------------------
 # 1.  Configuraçao da chave e do modelo Groq (LLaMA 3.1 8B-instant)
 # ------------------------------------------------------------------
-load_dotenv(".env")      # precisa ter GROQ_API_KEY no arquivo .env
+load_dotenv(".env")
 
 llm_config = {
     "config_list": [
@@ -16,8 +16,8 @@ llm_config = {
             "api_type": "groq",
         }
     ],
-    "temperature": 0,        # decisoes deterministicas
-    "max_tokens": 5          # resposta bem curta
+    "temperature": 0,        # Valores baixos (ex: 0.0–0.3): respostas mais determinísticas e previsíveis. Valores altos (ex: 0.7–1.0): respostas mais criativas e variadas.
+    "max_tokens": 5          # respostas curtas
 }
 VALID_MOVES = {"up", "down", "left", "right"}
 
