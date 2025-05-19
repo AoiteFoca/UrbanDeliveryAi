@@ -1,37 +1,122 @@
 
-# Otimizando Entregas Urbanas com IA
+# Otimizando Entregas Urbanas com Inteligência Artificial
+
+Este projeto simula um sistema de entregas urbanas em uma grade 4x4 utilizando dois agentes inteligentes que tomam decisões com base em heurísticas simples e linguagem natural. A proposta é demonstrar como técnicas de Inteligência Artificial podem ser aplicadas em cenários reais, como a logística urbana de última milha (last mile delivery).
+
+---
 
 ## Objetivo
-Este projeto tem como foco a simulação de entregas urbanas em um ambiente 4x4, utilizando dois agentes inteligentes e heurísticas simples para tomada de decisão. A proposta é demonstrar como conceitos de Inteligência Artificial podem ser aplicados em cenários reais, como a logística urbana.
 
-## Tecnologias Utilizadas
-- Python 3.10+
-- VSCode
-- Bibliotecas: `numpy`, `tabulate`, `random`
+Criar uma simulação onde dois agentes autônomos (x e y) se movem em uma grade 4x4 tentando atingir seus destinos com o menor custo possível, evitando colisões e respeitando os limites do ambiente. A movimentação é orientada por um modelo LLM (LLaMA 3.1 8B Instant via Groq API), que analisa as opções e escolhe a melhor ação possível em cada turno.
 
-## Inteligência Artificial
-O sistema utiliza heurísticas para escolher os melhores caminhos possíveis entre os pontos de entrega no mapa. Os agentes tomam decisões com base em custo estimado (distância de Manhattan) para otimizar o tempo de entrega.
+---
+
+## Inteligência Artificial Utilizada
+
+- **Modelos LLM (Language Model):** Cada agente é controlado por um modelo LLM que recebe opções de movimento e decide com base na menor distância de Manhattan, evitando colisões.
+- **Fallback Heurístico:** Se a resposta do modelo for inválida, uma heurística local decide a melhor jogada válida.
+- **Coordenação Assíncrona:** Os dois agentes atuam alternadamente em turnos, sendo orquestrados por um agente proxy sem intervenção humana.
+
+---
 
 ## Estrutura do Projeto
-```
-UrbanDeliveryAi/
-├── agents/
-│   └── agent.py
-├── map/
-│   └── city_map.py
+
+```plaintext
+UrbanDeliveryAI/
 ├── main.py
-├── utils.py
-├── README.md
+├── .env
 ├── requirements.txt
+├── README.md
 ```
 
-## Como Executar o projeto
-- Inicie clonando o repositório para sua IDE de preferência (Estou utilizando VSCODE);
-- Crie um ambiente virtual com o comando `python -m venv venv`;
-- instale as dependencias pelo comando `pip install -r requirements.txt`;
-- Rode o ___main.py___.
+---
 
-<br>
+## Tecnologias Utilizadas
+
+- Python 3.10+
+- [AutoGen](https://github.com/microsoft/autogen) (Agentes de IA interativos)
+- Groq API com modelo LLaMA 3.1 8B Instant
+- Biblioteca `dotenv` para leitura de variáveis de ambiente
+- Terminal para exibição em tempo real da movimentação dos agentes
+
+---
+
+## Como Executar o Projeto
+
+1. **Clone o repositório:**
+   ```bash
+   git clone https://github.com/AoiteFoca/UrbanDeliveryAI.git
+   cd UrbanDeliveryAI
+   ```
+
+2. **Crie e ative um ambiente virtual:**
+   ```bash
+   python -m venv venv
+   venv\Scripts\activate
+   ```
+
+3. **Instale as dependências:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Configure a API Key:**
+   - Crie um arquivo `.env` na raiz do projeto.
+   - Adicione sua chave da Groq:
+     ```
+     GROQ_API_KEY=sua_chave_groq
+     ```
+
+5. **Execute a simulação:**
+   ```bash
+   python main.py
+   ```
+
+   O terminal exibirá a movimentação dos agentes na grade até que ambos cheguem aos seus objetivos.
+
+---
+
+## Exemplo de Saída no Terminal
+
+```
+. . . Y
+. . . .
+. . . .
+X . . .
+
+. . . Y
+. . . .
+X . . .
+. . . .
+
+...
+
+. . X .
+. . . .
+. . . .
+. Y . .
+
+. . . X
+. . . .
+. . . .
+Y . . .
+
+Entrega concluida!
+```
+
+---
+
+## 🔍 Lógica de Decisão dos Agentes
+
+Cada agente avalia suas quatro opções possíveis (cima, baixo, esquerda, direita) com base nos seguintes critérios:
+
+- A nova posição está dentro dos limites da grade?
+- A nova posição colide com o outro agente?
+- Qual a distância de Manhattan entre a nova posição e o objetivo?
+
+A partir desses dados, o modelo LLM decide qual direção tomar. Se a resposta for inválida ou ambígua, uma função heurística local assume a decisão.
+
+---
 
 <div align="center">
 <h3 align="center">Autor</h3>
