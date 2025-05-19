@@ -1,7 +1,7 @@
 import os
 import time
-from dotenv import load_dotenv
-from autogen import AssistantAgent, UserProxyAgent
+from dotenv import load_dotenv # type: ignore
+from autogen import AssistantAgent, UserProxyAgent # type: ignore
 
 # ------------------------------------------------------------------
 # 1.  Configuraçao da chave e do modelo Groq (LLaMA 3.1 8B-instant)
