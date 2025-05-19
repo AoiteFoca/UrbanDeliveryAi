@@ -109,7 +109,7 @@ def extract_action(response_content: str) -> str:
     return ""
 
 # ------------------------------------------------------------------
-# 4.  Criação dos AssistantAgents (Ana e Beto)
+# 4.  Criação dos AssistantAgents (x e y)
 # ------------------------------------------------------------------
 system_msg_template = """
 Você controla {nome} em uma grade 4×4.
@@ -126,16 +126,16 @@ REGRAS
 3. Responda **apenas** com uma destas palavras, em minúsculo: up, down, left ou right.
 """
 
-agent_ana  = AssistantAgent(
-    name="DeliveryAgentAna",
-    description="Decide o próximo movimento de Ana",
-    system_message=system_msg_template.format(nome="Ana"),
+agent_x  = AssistantAgent(
+    name="DeliveryAgentx",
+    description="Decide o próximo movimento de x",
+    system_message=system_msg_template.format(nome="x"),
     llm_config=llm_config,
 )
-agent_beto = AssistantAgent(
-    name="DeliveryAgentBeto",
-    description="Decide o próximo movimento de Beto",
-    system_message=system_msg_template.format(nome="Beto"),
+agent_y = AssistantAgent(
+    name="DeliveryAgenty",
+    description="Decide o próximo movimento de y",
+    system_message=system_msg_template.format(nome="y"),
     llm_config=llm_config,
 )
 
@@ -151,47 +151,47 @@ user_proxy = UserProxyAgent(
 # 5.  Inicializa mundo e roda a simulação
 # ------------------------------------------------------------------
 world = World()
-ag1 = Agent("Ana",  [3, 0], [0, 3])
-ag2 = Agent("Beto", [0, 3], [3, 0])
+ag1 = Agent("x",  [3, 0], [0, 3])
+ag2 = Agent("y", [0, 3], [3, 0])
 world.add_agent(ag1)
 world.add_agent(ag2)
 world.update_positions()
 
 while ag1.position != ag1.goal or ag2.position != ag2.goal:
 
-    # ---------- TURNO DE ANA ----------
+    # ---------- TURNO DE x ----------
     if ag1.position != ag1.goal:
-        prompt_ana = (
+        prompt_x = (
             f"{options_prompt(ag1, ag2, world)}\n"
             f"Objetivo: {ag1.goal}\n"
             "Escolha sua jogada:"
         )
-        resp_ana = user_proxy.initiate_chat(
-            recipient=agent_ana,
-            message=prompt_ana,
+        resp_x = user_proxy.initiate_chat(
+            recipient=agent_x,
+            message=prompt_x,
             max_turns=1,
         )
-        action_ana = extract_action(resp_ana.chat_history[-1]["content"])
-        if action_ana not in VALID_MOVES:
-            action_ana = fallback_best_move(ag1, ag2, world)
-        ag1.move_with_action(action_ana, world)
+        action_x = extract_action(resp_x.chat_history[-1]["content"])
+        if action_x not in VALID_MOVES:
+            action_x = fallback_best_move(ag1, ag2, world)
+        ag1.move_with_action(action_x, world)
 
-    # ---------- TURNO DE BETO ----------
+    # ---------- TURNO DE y ----------
     if ag2.position != ag2.goal:
-        prompt_beto = (
+        prompt_y = (
             f"{options_prompt(ag2, ag1, world)}\n"
             f"Objetivo: {ag2.goal}\n"
             "Escolha sua jogada:"
         )
-        resp_beto = user_proxy.initiate_chat(
-            recipient=agent_beto,
-            message=prompt_beto,
+        resp_y = user_proxy.initiate_chat(
+            recipient=agent_y,
+            message=prompt_y,
             max_turns=1,
         )
-        action_beto = extract_action(resp_beto.chat_history[-1]["content"])
-        if action_beto not in VALID_MOVES:
-            action_beto = fallback_best_move(ag2, ag1, world)
-        ag2.move_with_action(action_beto, world)
+        action_y = extract_action(resp_y.chat_history[-1]["content"])
+        if action_y not in VALID_MOVES:
+            action_y = fallback_best_move(ag2, ag1, world)
+        ag2.move_with_action(action_y, world)
 
     world.display()
     time.sleep(1)
