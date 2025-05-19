@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from autogen import AssistantAgent, UserProxyAgent
 
 # ------------------------------------------------------------------
-# 1.  Configuração da chave e do modelo Groq (LLaMA 3.1 8B-instant)
+# 1.  Configuraçao da chave e do modelo Groq (LLaMA 3.1 8B-instant)
 # ------------------------------------------------------------------
 load_dotenv(".env")      # precisa ter GROQ_API_KEY no arquivo .env
 
@@ -16,13 +16,13 @@ llm_config = {
             "api_type": "groq",
         }
     ],
-    "temperature": 0,        # decisões determinísticas
+    "temperature": 0,        # decisoes deterministicas
     "max_tokens": 5          # resposta bem curta
 }
 VALID_MOVES = {"up", "down", "left", "right"}
 
 # ------------------------------------------------------------------
-# 2.  Mundo em grade 4×4 e agente “físico”
+# 2.  Mundo em grade 4×4 e agente “fisico”
 # ------------------------------------------------------------------
 class World:
     def __init__(self, width=4, height=4):
@@ -64,10 +64,10 @@ class Agent:
         world.update_positions()
 
 # ------------------------------------------------------------------
-# 3.  Funções auxiliares de raciocínio local
+# 3.  Funçoes auxiliares de raciocinio local
 # ------------------------------------------------------------------
 def options_prompt(agent, other, world):
-    """Retorna as quatro opções anotadas para o prompt do LLM."""
+    """Retorna as quatro opçoes anotadas para o prompt do LLM."""
     moves = {"up":(-1,0),"down":(1,0),"left":(0,-1),"right":(0,1)}
     lines = []
     for m, (dx,dy) in moves.items():
@@ -79,7 +79,7 @@ def options_prompt(agent, other, world):
     return "\n".join(lines)
 
 def fallback_best_move(agent, other, world):
-    """Se o LLM falhar, escolhe o melhor movimento válido localmente."""
+    """Se o LLM falhar, escolhe o melhor movimento valido localmente."""
     moves = {"up":(-1,0),"down":(1,0),"left":(0,-1),"right":(0,1)}
     best_move, best_dist = None, 1e9
     for m,(dx,dy) in moves.items():
@@ -91,10 +91,10 @@ def fallback_best_move(agent, other, world):
         dist = abs(nx-agent.goal[0]) + abs(ny-agent.goal[1])
         if dist < best_dist:
             best_move, best_dist = m, dist
-    return best_move or "up"   # se tudo falhar, sobe (não sai do grid)
+    return best_move or "up"   # se tudo falhar, sobe (nao sai do grid)
 
 def extract_action(response_content: str) -> str:
-    """Extrai a primeira palavra válida da resposta do LLM."""
+    """Extrai a primeira palavra valida da resposta do LLM."""
     content = response_content.strip().lower()
     for token in VALID_MOVES:
         if token in content:
@@ -108,37 +108,37 @@ def extract_action(response_content: str) -> str:
     return ""
 
 # ------------------------------------------------------------------
-# 4.  Criação dos AssistantAgents (x e y)
+# 4.  Criaçao dos AssistantAgents (x e y)
 # ------------------------------------------------------------------
 system_msg_template = """
 Você controla {nome} em uma grade 4×4.
 
-Será fornecida uma lista de 4 opções, cada uma com:
-- posição resultante
-- distância Manhattan até o objetivo
-- in_bounds (se a posição está dentro do grid)
+Sera fornecida uma lista de 4 opçoes, cada uma com:
+- posiçao resultante
+- distância Manhattan ate o objetivo
+- in_bounds (se a posiçao esta dentro do grid)
 - collision (se colide com o outro agente)
 
 REGRAS
-1. Escolha a opção de menor distância com in_bounds=True e collision=False.
+1. Escolha a opçao de menor distância com in_bounds=True e collision=False.
 2. Se houver empate, prefira: up > down > left > right.
 3. Responda **apenas** com uma destas palavras, em minúsculo: up, down, left ou right.
 """
 
 agent_x  = AssistantAgent(
     name="DeliveryAgentx",
-    description="Decide o próximo movimento de x",
+    description="Decide o proximo movimento de x",
     system_message=system_msg_template.format(nome="x"),
     llm_config=llm_config,
 )
 agent_y = AssistantAgent(
     name="DeliveryAgenty",
-    description="Decide o próximo movimento de y",
+    description="Decide o proximo movimento de y",
     system_message=system_msg_template.format(nome="y"),
     llm_config=llm_config,
 )
 
-# Orquestrador sem intervenção humana
+# Orquestrador sem intervençao humana
 user_proxy = UserProxyAgent(
     name="User",
     llm_config=False,
@@ -147,7 +147,7 @@ user_proxy = UserProxyAgent(
 )
 
 # ------------------------------------------------------------------
-# 5.  Inicializa mundo e roda a simulação
+# 5.  Inicializa mundo e roda a simulaçao
 # ------------------------------------------------------------------
 world = World()
 ag1 = Agent("x",  [3, 0], [0, 3])
@@ -195,4 +195,4 @@ while ag1.position != ag1.goal or ag2.position != ag2.goal:
     world.display()
     time.sleep(1)
 
-print("Entrega concluída!")
+print("Entrega concluida!")
