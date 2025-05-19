@@ -76,7 +76,7 @@ UrbanDeliveryAI/
 
 ---
 
-## 📈 Exemplo de Saída no Terminal
+## Exemplo de Saída no Terminal
 
 ```
 . . . Y
