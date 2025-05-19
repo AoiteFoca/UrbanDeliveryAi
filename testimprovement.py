@@ -1,7 +1,6 @@
 import os
 import time
 from dotenv import load_dotenv
-import autogen
 from autogen import AssistantAgent, UserProxyAgent
 
 # ------------------------------------------------------------------
