@@ -4,7 +4,7 @@ from dotenv import load_dotenv # type: ignore
 from autogen import AssistantAgent, UserProxyAgent # type: ignore
 
 # ------------------------------------------------------------------
-# 1.  Configuraçao da chave e do modelo Groq (LLaMA 3.1 8B-instant)
+# 1.  Configuracao da chave e do modelo Groq (LLaMA 3.1 8B-instant)
 # ------------------------------------------------------------------
 load_dotenv(".env")
 
@@ -64,10 +64,10 @@ class Agent:
         world.update_positions()
 
 # ------------------------------------------------------------------
-# 3.  Funçoes auxiliares de raciocinio local
+# 3.  Funcoes auxiliares de raciocinio local
 # ------------------------------------------------------------------
 def options_prompt(agent, other, world):
-    """Retorna as quatro opçoes anotadas para o prompt do LLM."""
+    """Retorna as quatro opcoes anotadas para o prompt do LLM."""
     moves = {"up":(-1,0),"down":(1,0),"left":(0,-1),"right":(0,1)}
     lines = []
     for m, (dx,dy) in moves.items():
@@ -108,19 +108,19 @@ def extract_action(response_content: str) -> str:
     return ""
 
 # ------------------------------------------------------------------
-# 4.  Criaçao dos AssistantAgents (x e y)
+# 4.  Criacao dos AssistantAgents (x e y)
 # ------------------------------------------------------------------
 system_msg_template = """
 Você controla {nome} em uma grade 4×4.
 
-Sera fornecida uma lista de 4 opçoes, cada uma com:
-- posiçao resultante
+Sera fornecida uma lista de 4 opcoes, cada uma com:
+- posicao resultante
 - distância Manhattan ate o objetivo
-- in_bounds (se a posiçao esta dentro do grid)
+- in_bounds (se a posicao esta dentro do grid)
 - collision (se colide com o outro agente)
 
 REGRAS
-1. Escolha a opçao de menor distância com in_bounds=True e collision=False.
+1. Escolha a opcao de menor distância com in_bounds=True e collision=False.
 2. Se houver empate, prefira: up > down > left > right.
 3. Responda **apenas** com uma destas palavras, em minúsculo: up, down, left ou right.
 """
@@ -138,7 +138,7 @@ agent_y = AssistantAgent(
     llm_config=llm_config,
 )
 
-# Orquestrador sem intervençao humana
+# Orquestrador sem intervencao humana
 user_proxy = UserProxyAgent(
     name="User",
     llm_config=False,
@@ -147,7 +147,7 @@ user_proxy = UserProxyAgent(
 )
 
 # ------------------------------------------------------------------
-# 5.  Inicializa mundo e roda a simulaçao
+# 5.  Inicializa mundo e roda a simulacao
 # ------------------------------------------------------------------
 world = World()
 ag1 = Agent("x",  [3, 0], [0, 3])
