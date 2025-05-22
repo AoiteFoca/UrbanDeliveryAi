@@ -2,6 +2,7 @@ import os
 import time
 from dotenv import load_dotenv # type: ignore
 from autogen import AssistantAgent, UserProxyAgent # type: ignore
+import random
 
 # ------------------------------------------------------------------
 # 1.  Configuracao da chave e do modelo Groq (LLaMA 3.1 8B-instant)
@@ -25,16 +26,31 @@ VALID_MOVES = {"up", "down", "left", "right"}
 # 2.  Mundo em grade 4×4 e agente “fisico”
 # ------------------------------------------------------------------
 class World:
-    def __init__(self, width=4, height=4):
+    def __init__(self, width=4, height=4, initial_positions=None):
         self.width  = width
         self.height = height
         self.grid   = [["." for _ in range(width)] for _ in range(height)]
         self.agents = []
+        self.initial_positions = initial_positions or []
+        self.obstacle = self.generate_obstacle()
 
-    def add_agent(self, agent):   self.agents.append(agent)
+    def generate_obstacle(self):
+        while True:
+            x = random.randint(0, self.height - 1)
+            y = random.randint(0, self.width - 1)
+            # Evita criar no mesmo lugar que os agentes iniciais
+            if [x, y] not in self.initial_positions:
+                return [x, y]
+            
+    def add_agent(self, agent):
+        self.agents.append(agent)
 
     def update_positions(self):
         self.grid = [["." for _ in range(self.width)] for _ in range(self.height)]
+        # Marca o obstáculo
+        ox, oy = self.obstacle
+        self.grid[ox][oy] = "0"
+        # Marca os agentes
         for ag in self.agents:
             x, y = ag.position
             self.grid[x][y] = ag.name[0].upper()
@@ -50,6 +66,7 @@ class Agent:
         self.name     = name
         self.position = position     # [linha, coluna]
         self.goal     = goal
+        self.moves    = 0            # contador de movimentos
 
     def move_with_action(self, direction, world):
         dx = dy = 0
@@ -60,7 +77,9 @@ class Agent:
 
         nx, ny = self.position[0] + dx, self.position[1] + dy
         if 0 <= nx < world.height and 0 <= ny < world.width:
-            self.position = [nx, ny]
+            if [nx, ny] != world.obstacle:  # <- Evita cair no buraco
+                self.position = [nx, ny]
+                self.moves += 1             # Incrementa o contador
         world.update_positions()
 
 # ------------------------------------------------------------------
@@ -73,10 +92,11 @@ def options_prompt(agent, other, world):
     for m, (dx,dy) in moves.items():
         nx, ny = agent.position[0]+dx, agent.position[1]+dy
         in_bounds = 0 <= nx < world.height and 0 <= ny < world.width
-        collision = [nx,ny] == other.position
+        collision = [nx,ny] == other.position or [nx,ny] == world.obstacle
         dist = abs(nx-agent.goal[0]) + abs(ny-agent.goal[1]) if in_bounds else 99
         lines.append(f"{m}: pos=({nx},{ny}), dist={dist}, in_bounds={in_bounds}, collision={collision}")
     return "\n".join(lines)
+
 
 def fallback_best_move(agent, other, world):
     """Se o LLM falhar, escolhe o melhor movimento valido localmente."""
@@ -91,6 +111,8 @@ def fallback_best_move(agent, other, world):
         dist = abs(nx-agent.goal[0]) + abs(ny-agent.goal[1])
         if dist < best_dist:
             best_move, best_dist = m, dist
+        if [nx, ny] == world.obstacle:
+            continue
     return best_move or "up"   # se tudo falhar, sobe (nao sai do grid)
 
 def extract_action(response_content: str) -> str:
@@ -149,9 +171,14 @@ user_proxy = UserProxyAgent(
 # ------------------------------------------------------------------
 # 5.  Inicializa mundo e roda a simulacao
 # ------------------------------------------------------------------
-world = World()
-ag1 = Agent("x",  [3, 0], [0, 3])
-ag2 = Agent("y", [0, 3], [3, 0])
+initial_pos_x = [3, 0]
+initial_pos_y = [0, 3]
+goal_x = [0, 3]
+goal_y = [3, 0]
+
+world = World(initial_positions=[initial_pos_x, initial_pos_y])
+ag1 = Agent("x", initial_pos_x, goal_x)
+ag2 = Agent("y", initial_pos_y, goal_y)
 world.add_agent(ag1)
 world.add_agent(ag2)
 world.update_positions()
@@ -195,4 +222,6 @@ while ag1.position != ag1.goal or ag2.position != ag2.goal:
     world.display()
     time.sleep(1)
 
-print("Entrega concluida!")
+print("Entrega concluída!")
+print(f"Movimentos do agente X: {ag1.moves}")
+print(f"Movimentos do agente Y: {ag2.moves}")
