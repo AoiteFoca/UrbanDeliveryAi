@@ -39,7 +39,7 @@ UrbanDeliveryAI/
 - Python 3.10+
 - [AutoGen](https://github.com/microsoft/autogen) (Agentes de IA interativos)
 - Groq API com modelo LLaMA 3.1 8B Instant
-- Biblioteca `dotenv` para leitura de variáveis de ambiente
+- Bibliotecas `os`, `time`, `random`, `warnings` e `dotenv`.
 - Terminal para exibição em tempo real da movimentação dos agentes
 
 ---
