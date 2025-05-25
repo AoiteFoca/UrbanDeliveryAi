@@ -182,7 +182,7 @@ goal_y = [3, 0]
 world = World(
     initial_positions=[initial_pos_x, initial_pos_y],
     num_obstacles=2,
-    forbidden_positions=[[0, 0], [3, 3], [0, 1], [3, 2]]
+    forbidden_positions=[[3, 0], [0, 3], [0, 2], [3, 1]]
 )
 
 ag1 = Agent("x", initial_pos_x, goal_x)
