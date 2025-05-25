@@ -39,7 +39,7 @@ UrbanDeliveryAI/
 - Python 3.10+
 - [AutoGen](https://github.com/microsoft/autogen) (Agentes de IA interativos)
 - Groq API com modelo LLaMA 3.1 8B Instant
-- Biblioteca `dotenv` para leitura de variáveis de ambiente
+- Bibliotecas `os`, `time`, `random`, `warnings` e `dotenv`.
 - Terminal para exibição em tempo real da movimentação dos agentes
 
 ---
@@ -82,27 +82,51 @@ UrbanDeliveryAI/
 ## Exemplo de Saída no Terminal
 
 ```
-. . . Y
-. . . .
-. . . .
-X . . .
+Rodada 1:
++---+---+---+---+
+| . | . | . | Y |
++---+---+---+---+
+| . | . | . | . |
++---+---+---+---+
+| . | . | 0 | 0 |
++---+---+---+---+
+| X | . | . | . |
++---+---+---+---+
 
-. . . Y
-. . . .
-X . . .
-. . . .
+Rodada 2:
++---+---+---+---+
+| . | . | Y | . |
++---+---+---+---+
+| . | . | . | . |
++---+---+---+---+
+| X | . | 0 | 0 |
++---+---+---+---+
+| . | . | . | . |
++---+---+---+---+
 
-...
+... São executadas mais rodadas ...
 
-. . X .
-. . . .
-. . . .
-. Y . .
+Rodada 5:
++---+---+---+---+
+| . | . | X | . |
++---+---+---+---+
+| . | . | . | . |
++---+---+---+---+
+| Y | . | 0 | 0 |
++---+---+---+---+
+| . | . | . | . |
++---+---+---+---+
 
-. . . X
-. . . .
-. . . .
-Y . . .
+Rodada 6:
++---+---+---+---+
+| . | . | . | X |
++---+---+---+---+
+| . | . | . | . |
++---+---+---+---+
+| . | . | 0 | 0 |
++---+---+---+---+
+| Y | . | . | . |
++---+---+---+---+
 
 Entrega concluida!
 ```
@@ -117,7 +141,7 @@ Cada agente avalia suas quatro opções possíveis (cima, baixo, esquerda, direi
 - A nova posição colide com o outro agente?
 - Qual a distância de Manhattan entre a nova posição e o objetivo?
 
-A partir desses dados, o modelo LLM decide qual direção tomar. Se a resposta for inválida ou ambígua, uma função heurística local assume a decisão.
+A partir desses dados, o modelo LLM decide qual direção tomar.
 
 ---
 

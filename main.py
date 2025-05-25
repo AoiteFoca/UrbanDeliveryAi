@@ -2,11 +2,15 @@ import os
 import time
 from dotenv import load_dotenv # type: ignore
 from autogen import AssistantAgent, UserProxyAgent # type: ignore
+import random
+import warnings
 
 # ------------------------------------------------------------------
 # 1.  Configuracao da chave e do modelo Groq (LLaMA 3.1 8B-instant)
 # ------------------------------------------------------------------
 load_dotenv(".env")
+
+warnings.filterwarnings("ignore", category=UserWarning)
 
 llm_config = {
     "config_list": [
@@ -17,7 +21,7 @@ llm_config = {
         }
     ],
     "temperature": 0,        # Valores baixos (ex: 0.0–0.3): respostas mais determinísticas e previsíveis. Valores altos (ex: 0.7–1.0): respostas mais criativas e variadas.
-    "max_tokens": 5          # respostas curtas
+    "max_tokens": 5          # Respostas curtas
 }
 VALID_MOVES = {"up", "down", "left", "right"}
 
@@ -25,73 +29,94 @@ VALID_MOVES = {"up", "down", "left", "right"}
 # 2.  Mundo em grade 4×4 e agente “fisico”
 # ------------------------------------------------------------------
 class World:
-    def __init__(self, width=4, height=4):
-        self.width  = width
+    def __init__(self, width=4, height=4, initial_positions=None, num_obstacles=2, forbidden_positions=None):
+        self.width = width
         self.height = height
-        self.grid   = [["." for _ in range(width)] for _ in range(height)]
+        self.grid = [["." for _ in range(width)] for _ in range(height)]
         self.agents = []
+        self.initial_positions = initial_positions or []
+        self.forbidden_positions = forbidden_positions or [[0, 0], [3, 3], [0, 1], [3, 2]]  # Adicionado
+        self.obstacles = self.generate_obstacles(num_obstacles)
 
-    def add_agent(self, agent):   self.agents.append(agent)
+    def generate_obstacles(self, count):
+        obstacles = []
+        forbidden = self.initial_positions + self.forbidden_positions
+        while len(obstacles) < count:
+            x = random.randint(0, self.height - 1)
+            y = random.randint(0, self.width - 1)
+            pos = [x, y]
+            if pos not in forbidden and pos not in obstacles:
+                obstacles.append(pos)
+        return obstacles
+
+    def add_agent(self, agent):
+        self.agents.append(agent)
 
     def update_positions(self):
         self.grid = [["." for _ in range(self.width)] for _ in range(self.height)]
+        for ox, oy in self.obstacles:
+            self.grid[ox][oy] = "0"
         for ag in self.agents:
             x, y = ag.position
             self.grid[x][y] = ag.name[0].upper()
 
     def display(self):
         os.system("cls" if os.name == "nt" else "clear")
+        print("Mundo Atual (4x4):")
+        print("+" + "---+" * self.width)
         for row in self.grid:
-            print(" ".join(row))
+            print("| " + " | ".join(row) + " |")
+            print("+" + "---+" * self.width)
         print(flush=True)
 
 class Agent:
     def __init__(self, name, position, goal):
-        self.name     = name
-        self.position = position     # [linha, coluna]
-        self.goal     = goal
+        self.name = name
+        self.position = position
+        self.goal = goal
+        self.moves = 0
 
     def move_with_action(self, direction, world):
         dx = dy = 0
-        if   direction == "up":    dx = -1
-        elif direction == "down":  dx = 1
-        elif direction == "left":  dy = -1
+        if direction == "up": dx = -1
+        elif direction == "down": dx = 1
+        elif direction == "left": dy = -1
         elif direction == "right": dy = 1
 
         nx, ny = self.position[0] + dx, self.position[1] + dy
         if 0 <= nx < world.height and 0 <= ny < world.width:
-            self.position = [nx, ny]
+            if [nx, ny] not in world.obstacles:
+                self.position = [nx, ny]
+                self.moves += 1
         world.update_positions()
 
 # ------------------------------------------------------------------
 # 3.  Funcoes auxiliares de raciocinio local
 # ------------------------------------------------------------------
 def options_prompt(agent, other, world):
-    """Retorna as quatro opcoes anotadas para o prompt do LLM."""
-    moves = {"up":(-1,0),"down":(1,0),"left":(0,-1),"right":(0,1)}
+    moves = {"up": (-1, 0), "down": (1, 0), "left": (0, -1), "right": (0, 1)}
     lines = []
-    for m, (dx,dy) in moves.items():
-        nx, ny = agent.position[0]+dx, agent.position[1]+dy
+    for m, (dx, dy) in moves.items():
+        nx, ny = agent.position[0] + dx, agent.position[1] + dy
         in_bounds = 0 <= nx < world.height and 0 <= ny < world.width
-        collision = [nx,ny] == other.position
-        dist = abs(nx-agent.goal[0]) + abs(ny-agent.goal[1]) if in_bounds else 99
+        collision = [nx, ny] == other.position or [nx, ny] in world.obstacles
+        dist = abs(nx - agent.goal[0]) + abs(ny - agent.goal[1]) if in_bounds else 99
         lines.append(f"{m}: pos=({nx},{ny}), dist={dist}, in_bounds={in_bounds}, collision={collision}")
     return "\n".join(lines)
 
 def fallback_best_move(agent, other, world):
-    """Se o LLM falhar, escolhe o melhor movimento valido localmente."""
-    moves = {"up":(-1,0),"down":(1,0),"left":(0,-1),"right":(0,1)}
+    moves = {"up": (-1, 0), "down": (1, 0), "left": (0, -1), "right": (0, 1)}
     best_move, best_dist = None, 1e9
-    for m,(dx,dy) in moves.items():
-        nx, ny = agent.position[0]+dx, agent.position[1]+dy
+    for m, (dx, dy) in moves.items():
+        nx, ny = agent.position[0] + dx, agent.position[1] + dy
         if not (0 <= nx < world.height and 0 <= ny < world.width):
             continue
-        if [nx,ny] == other.position:
+        if [nx, ny] == other.position or [nx, ny] in world.obstacles:
             continue
-        dist = abs(nx-agent.goal[0]) + abs(ny-agent.goal[1])
+        dist = abs(nx - agent.goal[0]) + abs(ny - agent.goal[1])
         if dist < best_dist:
             best_move, best_dist = m, dist
-    return best_move or "up"   # se tudo falhar, sobe (nao sai do grid)
+    return best_move or "up"
 
 def extract_action(response_content: str) -> str:
     """Extrai a primeira palavra valida da resposta do LLM."""
@@ -149,12 +174,35 @@ user_proxy = UserProxyAgent(
 # ------------------------------------------------------------------
 # 5.  Inicializa mundo e roda a simulacao
 # ------------------------------------------------------------------
-world = World()
-ag1 = Agent("x",  [3, 0], [0, 3])
-ag2 = Agent("y", [0, 3], [3, 0])
+initial_pos_x = [3, 0]
+initial_pos_y = [0, 3]
+goal_x = [0, 3]
+goal_y = [3, 0]
+
+world = World(
+    initial_positions=[initial_pos_x, initial_pos_y],
+    num_obstacles=2,
+    forbidden_positions=[[0, 0], [3, 3], [0, 1], [3, 2]]
+)
+
+ag1 = Agent("x", initial_pos_x, goal_x)
+ag2 = Agent("y", initial_pos_y, goal_y)
 world.add_agent(ag1)
 world.add_agent(ag2)
 world.update_positions()
+
+# Exibe a mensagem de introdução com explicação
+print("\nEste Script irá apresentar uma Simulação de entrega de dois agentes!\n")
+print("Agente X: inicia na posição (3, 0) e tem como objetivo (0, 3).")
+print("Agente Y: inicia na posição (0, 3) e tem como objetivo (3, 0).\n")
+print("Ambos os agentes se movem em uma grade 4x4, tentando alcançar seus objetivos.\n")
+print("Observação: Existem 2 obstáculos representados por '0' no mapa, gerados aleatoriamente.\n")
+print("Os agentes não podem passar por nenhum obstáculo.")
+print("As jogadas válidas dos agentes são: up, down, left e right.")
+print("O jogo termina quando ambos os agentes alcançam seus objetivos.")
+print("Ao iniciar a simulação, os agentes começarão as entregas...")
+input("Pressione Enter para começar...\n")
+os.system("cls" if os.name == "nt" else "clear")
 
 while ag1.position != ag1.goal or ag2.position != ag2.goal:
 
@@ -195,4 +243,6 @@ while ag1.position != ag1.goal or ag2.position != ag2.goal:
     world.display()
     time.sleep(1)
 
-print("Entrega concluida!")
+print("Entrega concluída!")
+print(f"Movimentos do agente X: {ag1.moves}")
+print(f"Movimentos do agente Y: {ag2.moves}")
