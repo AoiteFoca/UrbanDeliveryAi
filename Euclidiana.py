@@ -126,7 +126,7 @@ def options_prompt(agent, other, world):
         nx, ny = agent.position[0] + dx, agent.position[1] + dy
         in_bounds = 0 <= nx < world.height and 0 <= ny < world.width
         collision = [nx, ny] == other.position or world.is_blocked(nx, ny)
-        dist = abs(nx - agent.goal[0]) + abs(ny - agent.goal[1]) if in_bounds else 99
+        dist = ((nx - agent.goal[0])**2 + (ny - agent.goal[1])**2)**0.5 if in_bounds else 99
         lines.append(f"{m}: pos=({nx},{ny}), dist={dist}, in_bounds={in_bounds}, collision={collision}")
     return "\n".join(lines)
 
@@ -139,7 +139,7 @@ def fallback_best_move(agent, other, world):
             continue
         if [nx, ny] == other.position or world.is_blocked(nx, ny):
             continue
-        dist = abs(nx - agent.goal[0]) + abs(ny - agent.goal[1])
+        dist = ((nx - agent.goal[0])**2 + (ny - agent.goal[1])**2)**0.5
         if dist < best_dist:
             best_move, best_dist = m, dist
     return best_move or "up"
