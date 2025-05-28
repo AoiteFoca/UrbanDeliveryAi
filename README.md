@@ -4,13 +4,13 @@
 
 # Otimizando Entregas Urbanas com Inteligência Artificial
 
-Este projeto simula um sistema de entregas urbanas em uma grade 4x4 utilizando dois agentes inteligentes que tomam decisões com base em heurísticas simples e linguagem natural. A proposta é demonstrar como técnicas de Inteligência Artificial podem ser aplicadas em cenários reais, como a logística urbana de última milha (last mile delivery).
+Este projeto simula um sistema de entregas urbanas em uma grade 4x4 utilizando dois agentes inteligentes que tomam decisões com base em heurísticas simples e linguagem natural passando por obstaculos estáticos e móveis gerados aleatóriamente pelo mapa. A proposta é demonstrar como técnicas de Inteligência Artificial podem ser aplicadas em cenários reais, como a logística urbana de última milha (last mile delivery).
 
 ---
 
 ## Objetivo
 
-Criar uma simulação onde dois agentes autônomos (x e y) se movem em uma grade 4x4 tentando atingir seus destinos com o menor custo possível, evitando colisões e respeitando os limites do ambiente. A movimentação é orientada por um modelo LLM (LLaMA 3.1 8B Instant via Groq API), que analisa as opções e escolhe a melhor ação possível em cada turno.
+Criar uma simulação onde dois agentes autônomos (x e y) se movem em uma grade 4x4 tentando atingir seus destinos com o menor custo possível, evitando colisões no mapa e respeitando os limites do ambiente.
 
 ---
 
@@ -76,7 +76,7 @@ O código main.py é onde está localizado o "selecionado" entre ambos. Ou seja,
      GROQ_API_KEY=sua_chave_groq
      ```
 
-5. **Execute a simulação:**
+5. **Execute a simulação principal:**
    ```bash
    python main.py
    ```
@@ -86,6 +86,12 @@ O código main.py é onde está localizado o "selecionado" entre ambos. Ou seja,
 ---
 
 ## Exemplo de Saída no Terminal
+
+Onde:
+- X equivale ao Agente X;
+- Y equivale ao Agente Y;
+- 0 Equivale aos Obstáculos estáticos (Burados, paredes, etc);
+- @ Equivale ao veículo transitando pelo mapa.
 
 ```
 Rodada 1:
@@ -144,8 +150,8 @@ Entrega concluida!
 Cada agente avalia suas quatro opções possíveis (cima, baixo, esquerda, direita) com base nos seguintes critérios:
 
 - A nova posição está dentro dos limites da grade?
-- A nova posição colide com o outro agente?
-- Qual a distância de Manhattan entre a nova posição e o objetivo?
+- A nova posição colide com o outro agente, obstáculos ou veículo?
+- Qual a distância de Manhattan/Euclidiana entre a nova posição e o objetivo?
 
 A partir desses dados, o modelo LLM decide qual direção tomar.
 
