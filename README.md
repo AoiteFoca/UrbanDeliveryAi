@@ -17,7 +17,7 @@ Criar uma simulação onde dois agentes autônomos (x e y) se movem em uma grade
 ## Inteligência Artificial Utilizada
 
 - **Modelos LLM (Language Model):** Cada agente é controlado por um modelo LLM que recebe opções de movimento e decide com base na menor distância de Manhattan, evitando colisões.
-- **Fallback Heurístico:** Se a resposta do modelo for inválida, uma heurística local decide a melhor jogada válida.
+- **Fallback Heurístico (Manhattan e Euclidiana):** Se a resposta do modelo for inválida, uma heurística local decide a melhor jogada válida.
 - **Coordenação Assíncrona:** Os dois agentes atuam alternadamente em turnos, sendo orquestrados por um agente proxy sem intervenção humana.
 
 ---
@@ -26,11 +26,17 @@ Criar uma simulação onde dois agentes autônomos (x e y) se movem em uma grade
 
 ```plaintext
 UrbanDeliveryAI/
-├── main.py
 ├── .env
-├── requirements.txt
+├── Euclidiana.py
+├── main.py
+├── Manhattan.py
 ├── README.md
+├── requirements.txt
 ```
+
+Os códigos Manhattan e Euclidiana são os arquivos de teste que usei para selecionar qual o melhor entre eles, considerando estatísticas e gráficos de resultados.
+
+O código main.py é onde está localizado o "selecionado" entre ambos. Ou seja, caso queira executar apenas o principal, rode o ``main.py``
 
 ---
 
@@ -86,7 +92,7 @@ Rodada 1:
 +---+---+---+---+
 | . | . | . | Y |
 +---+---+---+---+
-| . | . | . | . |
+| @ | . | . | . |
 +---+---+---+---+
 | . | . | 0 | 0 |
 +---+---+---+---+
@@ -97,7 +103,7 @@ Rodada 2:
 +---+---+---+---+
 | . | . | Y | . |
 +---+---+---+---+
-| . | . | . | . |
+| . | @ | . | . |
 +---+---+---+---+
 | X | . | 0 | 0 |
 +---+---+---+---+
@@ -114,7 +120,7 @@ Rodada 5:
 +---+---+---+---+
 | Y | . | 0 | 0 |
 +---+---+---+---+
-| . | . | . | . |
+| . | . | @ | . |
 +---+---+---+---+
 
 Rodada 6:
@@ -125,7 +131,7 @@ Rodada 6:
 +---+---+---+---+
 | . | . | 0 | 0 |
 +---+---+---+---+
-| Y | . | . | . |
+| Y | . | . | @ |
 +---+---+---+---+
 
 Entrega concluida!
@@ -133,7 +139,7 @@ Entrega concluida!
 
 ---
 
-## 🔍 Lógica de Decisão dos Agentes
+## Lógica de Decisão dos Agentes
 
 Cada agente avalia suas quatro opções possíveis (cima, baixo, esquerda, direita) com base nos seguintes critérios:
 
