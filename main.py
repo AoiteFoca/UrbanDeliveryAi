@@ -202,17 +202,17 @@ initial_pos_y = [0, 3] # Posicao inicial do Agente Y
 goal_x = [0, 3] # Posicao final do Agente X
 goal_y = [3, 0] # Posicao final do Agente Y
 
-world = World(
+world = World( # Atribuicao da classe World para desenvolvimento geral do programa (Adicao de Agentes, posicoes, etc)
     initial_positions=[initial_pos_x, initial_pos_y],
     num_obstacles=2,
     forbidden_positions=[[3, 0], [0, 3], [0, 2], [3, 1]]
 )
 
-ag1 = Agent("x", initial_pos_x, goal_x)
-ag2 = Agent("y", initial_pos_y, goal_y)
-world.add_agent(ag1)
-world.add_agent(ag2)
-world.update_positions()
+ag1 = Agent("x", initial_pos_x, goal_x) # Set dos valores do Agente X
+ag2 = Agent("y", initial_pos_y, goal_y) # Set dos valores do Agente Y
+world.add_agent(ag1) # Adicao do Agente X
+world.add_agent(ag2) # Adicao do Agente Y
+world.update_positions() # Inicio das atualizacoes de posicao
 
 # Abaixo seguem as mensagens de introducao ao usuario a respeito do programa
 # Coloquei uma inicializacao do programa com input enter para dar tempo de entender o contexto
@@ -232,10 +232,10 @@ print("Ao iniciar a simulacão, os agentes comecarão as entregas...")
 input("Pressione Enter para comecar...\n")
 os.system("cls" if os.name == "nt" else "clear")
 
-while ag1.position != ag1.goal or ag2.position != ag2.goal:
+while ag1.position != ag1.goal or ag2.position != ag2.goal: # Coloca os agentes em loop enquanto a posicao atual nao coincidir com o objetivo 
     world.move_veiculo()
 
-    if ag1.position != ag1.goal:
+    if ag1.position != ag1.goal: # Logica de validacao de posicao atual x goal do 'Agente X'
         prompt_x = (
             f"{options_prompt(ag1, ag2, world)}\n"
             f"Objetivo: {ag1.goal}\n"
@@ -251,7 +251,7 @@ while ag1.position != ag1.goal or ag2.position != ag2.goal:
             action_x = fallback_best_move(ag1, ag2, world)
         ag1.move_with_action(action_x, world)
 
-    if ag2.position != ag2.goal:
+    if ag2.position != ag2.goal: # Logica de validacao de posicao atual x goal do 'Agente Y'
         prompt_y = (
             f"{options_prompt(ag2, ag1, world)}\n"
             f"Objetivo: {ag2.goal}\n"
@@ -267,8 +267,8 @@ while ag1.position != ag1.goal or ag2.position != ag2.goal:
             action_y = fallback_best_move(ag2, ag1, world)
         ag2.move_with_action(action_y, world)
 
-    world.display()
-    time.sleep(1)
+    world.display() # Display do mapa
+    time.sleep(1) # Controle de 'atraso'
 
 # Saida final e dos valores de movimentos de cada agente
 print("Entrega concluida!")
