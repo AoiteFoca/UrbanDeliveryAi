@@ -164,7 +164,7 @@ Você controla {nome} em uma grade 4×4.
 
 Sera fornecida uma lista de 4 opcoes, cada uma com:
 - posicao resultante
-- distância Manhattan ate o objetivo
+- distância Euclidiana ate o objetivo
 - in_bounds (se a posicao esta dentro do grid)
 - collision (se colide com o outro agente)
 
