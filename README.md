@@ -38,6 +38,9 @@ Os códigos Manhattan e Euclidiana são os arquivos de teste que usei para selec
 
 O código main.py é onde está localizado o "selecionado" entre ambos. Ou seja, caso queira executar apenas o principal, rode o ``main.py``
 
+>!!Atenção!! <br>
+>Apenas o código main será totalmente comentado, pois os outros são idênticos, mudando apenas o tipo de distância usado pelos Agentes.
+
 ---
 
 ## Tecnologias Utilizadas
