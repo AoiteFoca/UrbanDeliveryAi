@@ -12,34 +12,34 @@ load_dotenv(".env")
 
 warnings.filterwarnings("ignore", category=UserWarning)
 
-llm_config = {
+llm_config = { # Configuracao geral da LLM
     "config_list": [
         {
-            "model": "llama-3.1-8b-instant",
-            "api_key": os.getenv("GROQ_API_KEY"),
+            "model": "llama-3.1-8b-instant", # Selecao da LLM
+            "api_key": os.getenv("GROQ_API_KEY"), # Insercao da chave da API GROQ em .env
             "api_type": "groq",
         }
     ],
     "temperature": 0,
     "max_tokens": 5
 }
-VALID_MOVES = {"up", "down", "left", "right"}
+VALID_MOVES = {"up", "down", "left", "right"} # Movimentos validos identificados pela IA
 
 # ------------------------------------------------------------------
 # 2.  Mundo em grade 4×4 e agente “fisico”
 # ------------------------------------------------------------------
-class World:
-    def __init__(self, width=4, height=4, initial_positions=None, num_obstacles=2, forbidden_positions=None):
+class World: # Nessa classe os objetos do mapa sao criados
+    def __init__(self, width=4, height=4, initial_positions=None, num_obstacles=2, forbidden_positions=None): # Set do tamanho do mapa, numero de agentes, etc...
         self.width = width
         self.height = height
         self.grid = [["." for _ in range(width)] for _ in range(height)]
         self.agents = []
         self.initial_positions = initial_positions or []
-        self.forbidden_positions = forbidden_positions or [[0, 0], [3, 3], [0, 1], [3, 2]]
-        self.obstacles = self.generate_obstacles(num_obstacles)
-        self.vehicle_position = self.generate_vehicle_position()
+        self.forbidden_positions = forbidden_positions or [[0, 0], [3, 3], [0, 1], [3, 2]] # Valores do grid que os obstáculos nao podem ser criados (iniciais e finais dos agentes).
+        self.obstacles = self.generate_obstacles(num_obstacles) # Declaracao dos obstaculos
+        self.veiculo_position = self.generate_veiculo_position() # Declaracao do veiculo
 
-    def generate_obstacles(self, count):
+    def generate_obstacles(self, count): # Funcao onde os obstaculos (fixos) sao gerados
         obstacles = []
         forbidden = self.initial_positions + self.forbidden_positions
         while len(obstacles) < count:
@@ -50,7 +50,7 @@ class World:
                 obstacles.append(pos)
         return obstacles
 
-    def generate_vehicle_position(self):
+    def generate_veiculo_position(self): # Funcao onde o veiculo (obstaculo movel) e gerado
         forbidden = self.initial_positions + self.forbidden_positions + self.obstacles
         while True:
             x = random.randint(0, self.height - 1)
@@ -58,35 +58,35 @@ class World:
             if [x, y] not in forbidden:
                 return [x, y]
 
-    def move_vehicle(self):
+    def move_veiculo(self): # Funcao que controla o movimento do obstaculo movel (veiculo)
         directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
         random.shuffle(directions)
         for dx, dy in directions:
-            nx = self.vehicle_position[0] + dx
-            ny = self.vehicle_position[1] + dy
+            nx = self.veiculo_position[0] + dx
+            ny = self.veiculo_position[1] + dy
             if 0 <= nx < self.height and 0 <= ny < self.width:
                 new_pos = [nx, ny]
                 if new_pos not in self.obstacles and all(ag.position != new_pos for ag in self.agents):
-                    self.vehicle_position = new_pos
+                    self.veiculo_position = new_pos
                     return
 
-    def add_agent(self, agent):
+    def add_agent(self, agent): # Funcao que, posteriormente, adiciona os agentes ao mundo
         self.agents.append(agent)
 
-    def update_positions(self):
+    def update_positions(self): # Funcao que controla a atualizacao das posicoes, trabalha relacionando com obstaculos
         self.grid = [["." for _ in range(self.width)] for _ in range(self.height)]
         for ox, oy in self.obstacles:
             self.grid[ox][oy] = "0"
-        vx, vy = self.vehicle_position
+        vx, vy = self.veiculo_position
         self.grid[vx][vy] = "@"
         for ag in self.agents:
             x, y = ag.position
             self.grid[x][y] = ag.name[0].upper()
 
-    def is_blocked(self, x, y):
-        return [x, y] in self.obstacles or [x, y] == self.vehicle_position
+    def is_blocked(self, x, y): # Funcao de identificacao de bloqueio no caminho do grid
+        return [x, y] in self.obstacles or [x, y] == self.veiculo_position
 
-    def display(self):
+    def display(self): # Funcao de desenho do grid e personalizacao basica
         os.system("cls" if os.name == "nt" else "clear")
         print("Mundo Atual (4x4):")
         print("+" + "---+" * self.width)
@@ -95,14 +95,14 @@ class World:
             print("+" + "---+" * self.width)
         print(flush=True)
 
-class Agent:
-    def __init__(self, name, position, goal):
+class Agent: # Classe voltada apenas aos agentes
+    def __init__(self, name, position, goal): # Aqui definimos valores para eles
         self.name = name
         self.position = position
         self.goal = goal
         self.moves = 0
 
-    def move_with_action(self, direction, world):
+    def move_with_action(self, direction, world): # Funcao de indicacao das direcoes
         dx = dy = 0
         if direction == "up": dx = -1
         elif direction == "down": dx = 1
@@ -171,7 +171,7 @@ Sera fornecida uma lista de 4 opcoes, cada uma com:
 REGRAS
 1. Escolha a opcao de menor distância com in_bounds=True e collision=False.
 2. Se houver empate, prefira: up > down > left > right.
-3. Responda **apenas** com uma destas palavras, em minúsculo: up, down, left ou right.
+3. Responda **apenas** com uma destas palavras, em minusculo: up, down, left ou right.
 """
 
 agent_x = AssistantAgent(
@@ -195,12 +195,12 @@ user_proxy = UserProxyAgent(
 )
 
 # ------------------------------------------------------------------
-# 5.  Inicializa mundo e roda a simulacao
+# 5.  Inicializa o mundo e roda a simulacao
 # ------------------------------------------------------------------
-initial_pos_x = [3, 0]
-initial_pos_y = [0, 3]
-goal_x = [0, 3]
-goal_y = [3, 0]
+initial_pos_x = [3, 0] # Posicao inicial do Agente X
+initial_pos_y = [0, 3] # Posicao inicial do Agente Y
+goal_x = [0, 3] # Posicao final do Agente X
+goal_y = [3, 0] # Posicao final do Agente Y
 
 world = World(
     initial_positions=[initial_pos_x, initial_pos_y],
@@ -214,23 +214,26 @@ world.add_agent(ag1)
 world.add_agent(ag2)
 world.update_positions()
 
-# Mensagem de introdução (sem alterações)
-print("\nEste Script irá apresentar uma Simulação de entrega de dois agentes!\n")
-print("Agente X: inicia na posição (3, 0) e tem como objetivo (0, 3).")
-print("Agente Y: inicia na posição (0, 3) e tem como objetivo (3, 0).\n")
-print("Ambos os agentes se movem em uma grade 4x4, tentando alcançar seus objetivos.\n")
-print("Observação:")
-print("Existem dois obstáculos representados por '0' no mapa, gerados aleatoriamente.")
-print("Existe um veículo representado por '@' que se move aleatoriamente pelo mapa.\n")
-print("Os agentes não podem passar por nenhum obstáculo.")
-print("As jogadas válidas dos agentes são: up, down, left e right.")
-print("O jogo termina quando ambos os agentes alcançam seus objetivos.")
-print("Ao iniciar a simulação, os agentes começarão as entregas...")
-input("Pressione Enter para começar...\n")
+# Abaixo seguem as mensagens de introducao ao usuario a respeito do programa
+# Coloquei uma inicializacao do programa com input enter para dar tempo de entender o contexto
+
+# Mensagem de introducao (sem alteracoes)
+print("\nEste Script ira apresentar uma Simulacão de entrega de dois agentes!\n")
+print("Agente X: inicia na posicão (3, 0) e tem como objetivo (0, 3).")
+print("Agente Y: inicia na posicão (0, 3) e tem como objetivo (3, 0).\n")
+print("Ambos os agentes se movem em uma grade 4x4, tentando alcancar seus objetivos.\n")
+print("Observacão:")
+print("Existem dois obstaculos representados por '0' no mapa, gerados aleatoriamente.")
+print("Existe um veiculo representado por '@' que se move aleatoriamente pelo mapa.\n")
+print("Os agentes não podem passar por nenhum obstaculo.")
+print("As jogadas validas dos agentes são: up, down, left e right.")
+print("O jogo termina quando ambos os agentes alcancam seus objetivos.")
+print("Ao iniciar a simulacão, os agentes comecarão as entregas...")
+input("Pressione Enter para comecar...\n")
 os.system("cls" if os.name == "nt" else "clear")
 
 while ag1.position != ag1.goal or ag2.position != ag2.goal:
-    world.move_vehicle()
+    world.move_veiculo()
 
     if ag1.position != ag1.goal:
         prompt_x = (
@@ -267,6 +270,7 @@ while ag1.position != ag1.goal or ag2.position != ag2.goal:
     world.display()
     time.sleep(1)
 
-print("Entrega concluída!")
+# Saida final e dos valores de movimentos de cada agente
+print("Entrega concluida!")
 print(f"Movimentos do agente X: {ag1.moves}")
 print(f"Movimentos do agente Y: {ag2.moves}")
