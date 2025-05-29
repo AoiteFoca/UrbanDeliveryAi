@@ -1,3 +1,4 @@
+# Import de bibliotecas
 import os
 import time
 from dotenv import load_dotenv  # type: ignore
@@ -8,7 +9,7 @@ import warnings
 # ------------------------------------------------------------------
 # 1.  Configuracao da chave e do modelo Groq (LLaMA 3.1 8B-instant)
 # ------------------------------------------------------------------
-load_dotenv(".env")
+load_dotenv(".env") # Chamada do dotenv
 
 warnings.filterwarnings("ignore", category=UserWarning)
 
