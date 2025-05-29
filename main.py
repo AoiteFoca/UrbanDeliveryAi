@@ -120,47 +120,51 @@ class Agent: # Classe voltada apenas aos agentes
 # ------------------------------------------------------------------
 # 3.  Funcoes auxiliares de raciocinio local
 # ------------------------------------------------------------------
-def options_prompt(agent, other, world):
-    moves = {"up": (-1, 0), "down": (1, 0), "left": (0, -1), "right": (0, 1)}
+
+# Como essa parte das funcoes e mais complexa, toda ela sera comentada em detalhes
+
+def options_prompt(agent, other, world): # Funcao de listagem das opcoes possiveis de movimento para cada agente
+    moves = {"up": (-1, 0), "down": (1, 0), "left": (0, -1), "right": (0, 1)} # Mapeamento das direcoes com suas respectivas variacoes no grid
     lines = []
-    for m, (dx, dy) in moves.items():
+    for m, (dx, dy) in moves.items(): # Para cada direcao possivel, calcula-se as informacoes abaixo
         nx, ny = agent.position[0] + dx, agent.position[1] + dy
-        in_bounds = 0 <= nx < world.height and 0 <= ny < world.width
-        collision = [nx, ny] == other.position or world.is_blocked(nx, ny)
-        dist = abs(nx - agent.goal[0]) + abs(ny - agent.goal[1]) if in_bounds else 99
-        lines.append(f"{m}: pos=({nx},{ny}), dist={dist}, in_bounds={in_bounds}, collision={collision}")
-    return "\n".join(lines)
+        in_bounds = 0 <= nx < world.height and 0 <= ny < world.width # Verifica se a nova posicao esta dentro dos limites do grid
+        collision = [nx, ny] == other.position or world.is_blocked(nx, ny) # Verifica se a posicao colide com outro agente ou obstaculo
+        dist = abs(nx - agent.goal[0]) + abs(ny - agent.goal[1]) if in_bounds else 99 # Calcula a distancia de Manhattan se estiver dentro do grid
+        lines.append(f"{m}: pos=({nx},{ny}), dist={dist}, in_bounds={in_bounds}, collision={collision}") # Monta a string com os dados da opcao
+    return "\n".join(lines) # Retorna todas as opcoes possiveis em formato de texto para a LLM
 
-def fallback_best_move(agent, other, world):
-    moves = {"up": (-1, 0), "down": (1, 0), "left": (0, -1), "right": (0, 1)}
-    best_move, best_dist = None, 1e9
-    for m, (dx, dy) in moves.items():
-        nx, ny = agent.position[0] + dx, agent.position[1] + dy
-        if not (0 <= nx < world.height and 0 <= ny < world.width):
+def fallback_best_move(agent, other, world): # Funcao de decisao automatica caso a LLM nao retorne um movimento valido
+    moves = {"up": (-1, 0), "down": (1, 0), "left": (0, -1), "right": (0, 1)} # Mapeamento das direcoes
+    best_move, best_dist = None, 1e9 # Inicializa a melhor opcao com valores altos
+    for m, (dx, dy) in moves.items(): # Para cada direcao possivel
+        nx, ny = agent.position[0] + dx, agent.position[1] + dy # Calcula a nova posicao
+        if not (0 <= nx < world.height and 0 <= ny < world.width): # Ignora se estiver fora dos limites
             continue
-        if [nx, ny] == other.position or world.is_blocked(nx, ny):
+        if [nx, ny] == other.position or world.is_blocked(nx, ny): # Ignora se colidir com obstaculos ou outro agente
             continue
-        dist = abs(nx - agent.goal[0]) + abs(ny - agent.goal[1])
-        if dist < best_dist:
+        dist = abs(nx - agent.goal[0]) + abs(ny - agent.goal[1]) # Calcula a distancia de Manhattan
+        if dist < best_dist: # Atualiza a melhor opcao se a distancia for menor
             best_move, best_dist = m, dist
-    return best_move or "up"
+    return best_move or "up" # Retorna o melhor movimento ou "up" como padrao de seguranca
 
-def extract_action(response_content: str) -> str:
-    content = response_content.strip().lower()
-    for token in VALID_MOVES:
+def extract_action(response_content: str) -> str: # Funcao que extrai a acao (movimento) da resposta da LLM
+    content = response_content.strip().lower() # Limpa e padroniza a resposta
+    for token in VALID_MOVES: # Verifica se a resposta contem uma direcao valida
         if token in content:
             return token
-    if "action:" in content:
+    if "action:" in content: # Se estiver no formato "action: direcao", extrai a parte final
         tail = content.split("action:")[-1].strip()
         for token in VALID_MOVES:
             if tail.startswith(token):
                 return token
-    return ""
+    return "" # Se nada valido for encontrado, retorna vazio
 
 # ------------------------------------------------------------------
 # 4.  Criacao dos AssistantAgents (x e y)
 # ------------------------------------------------------------------
-system_msg_template = """
+# Template da mensagem de sistema que configura as regras de decisao da LLM
+system_msg_template = """ 
 Você controla {nome} em uma grade 4×4.
 
 Sera fornecida uma lista de 4 opcoes, cada uma com:
@@ -175,24 +179,25 @@ REGRAS
 3. Responda **apenas** com uma destas palavras, em minusculo: up, down, left ou right.
 """
 
-agent_x = AssistantAgent(
+agent_x = AssistantAgent( # Criacao e configuracao do LLM para o agente "x"
     name="DeliveryAgentx",
     description="Decide o proximo movimento de x",
     system_message=system_msg_template.format(nome="x"),
     llm_config=llm_config,
 )
-agent_y = AssistantAgent(
+
+agent_y = AssistantAgent( # Mesma criacao e configuracao do LLM para o agente "y"
     name="DeliveryAgenty",
     description="Decide o proximo movimento de y",
     system_message=system_msg_template.format(nome="y"),
     llm_config=llm_config,
 )
 
-user_proxy = UserProxyAgent(
+user_proxy = UserProxyAgent( 
     name="User",
-    llm_config=False,
-    human_input_mode="NEVER",
-    code_execution_config={"use_docker": False},
+    llm_config=False, # Desabilita o LLM 
+    human_input_mode="NEVER", # Sem input humano
+    code_execution_config={"use_docker": False}, # Nao usa docker pro codigo
 )
 
 # ------------------------------------------------------------------
